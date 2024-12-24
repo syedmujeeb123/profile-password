@@ -1,12 +1,11 @@
 import "./App.css";
-import DisplayPage from "./DisplayPage";
-import ProfilePage from "./ProfilePage";
+// import Login from "./Login";
+import MainContent from "./MainContent";
 
 function App() {
   return (
     <div className="text-center">
-      <ProfilePage />
-      <DisplayPage />
+      <MainContent />
     </div>
   );
 }

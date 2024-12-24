@@ -1,23 +1,26 @@
 import React, { useState, useEffect } from "react";
+import { Form, Input, Button, Alert, Spin } from "antd";
 
-const ChangePassword = () => {
+const ChangePassword = ({ setCurrentView, setShowChangePassword }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Fetch the current password from the API when the component mounts
     const fetchCurrentPassword = async () => {
       try {
-        const response = await fetch("https://calibrecue.com/api/Accounts", {
+        setLoading(true);
+        const response = await fetch("https://example.com/api/Accounts", {
           method: "POST", // Use POST if needed by the API
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: "mujeebsyed275@gmail.com", // Username for the account
+            username: "user@example.com", // Username for the account
           }),
         });
         const data = await response.json();
@@ -28,14 +31,16 @@ const ChangePassword = () => {
         }
       } catch (error) {
         setError("An error occurred while fetching the password.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCurrentPassword();
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = (values) => {
+    const { currentPassword, newPassword, confirmNewPassword } = values;
 
     // Validate the form
     if (!currentPassword || !newPassword || !confirmNewPassword) {
@@ -48,9 +53,12 @@ const ChangePassword = () => {
       return;
     }
 
-    // Check if the current password matches the fetched password
-    if (currentPassword !== "test11") {
-      setError("Current password is incorrect");
+    // Check if the current password matches the new one or confirm password
+    if (
+      currentPassword === newPassword ||
+      currentPassword === confirmNewPassword
+    ) {
+      setError("New password cannot be the same as the current password");
       return;
     }
 
@@ -60,67 +68,99 @@ const ChangePassword = () => {
     setCurrentPassword(""); // Clear the fields after successful change
     setNewPassword("");
     setConfirmNewPassword("");
+    setCurrentView("dashboard");
+    setShowChangePassword(false);
   };
 
   return (
-    <div className="w-2/3 p-8 space-y-6 rounded-md bg-white shadow-lg">
-      <h2 className="font-bold text-xl text-left">Change Password</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="w-full max-w-lg p-10 space-y-6 rounded-lg bg-white shadow-xl">
+        <h2 className="font-semibold text-2xl text-left mb-6">
+          Change Password
+        </h2>
 
-      {error && <p className="text-red-500">{error}</p>}
-      {success && <p className="text-green-500">{success}</p>}
+        {error && <Alert message={error} type="error" showIcon closable />}
+        {success && (
+          <Alert message={success} type="success" showIcon closable />
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="flex flex-col items-start">
-          <label htmlFor="currentPassword" className="font-bold mb-2">
-            Current Password <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="password"
-            id="currentPassword"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Current Password"
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-        </div>
-
-        <div className="flex flex-col items-start">
-          <label htmlFor="newPassword" className="font-bold mb-2">
-            New Password <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="password"
-            id="newPassword"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="New Password"
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-        </div>
-
-        <div className="flex flex-col items-start">
-          <label htmlFor="confirmNewPassword" className="font-bold mb-2">
-            Confirm New Password <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="password"
-            id="confirmNewPassword"
-            value={confirmNewPassword}
-            onChange={(e) => setConfirmNewPassword(e.target.value)}
-            placeholder="Confirm New Password"
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-        </div>
-
-        <div className="flex space-x-4 mt-6">
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-3 px-4 rounded-md hover:bg-blue-600"
+        {loading ? (
+          <div className="flex justify-center items-center">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <Form
+            onFinish={handleSubmit}
+            layout="vertical"
+            initialValues={{ currentPassword, newPassword, confirmNewPassword }}
           >
-            Change Password
-          </button>
-        </div>
-      </form>
+            <Form.Item
+              label="Current Password"
+              name="currentPassword"
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter your current password",
+                },
+              ]}
+            >
+              <Input.Password
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Current Password"
+                className="w-full p-3 border border-gray-300 rounded-lg text-lg"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="New Password"
+              name="newPassword"
+              rules={[
+                { required: true, message: "Please enter a new password" },
+              ]}
+            >
+              <Input.Password
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="New Password"
+                className="w-full p-3 border border-gray-300 rounded-lg text-lg"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Confirm New Password"
+              name="confirmNewPassword"
+              rules={[
+                { required: true, message: "Please confirm your new password" },
+              ]}
+            >
+              <Input.Password
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="Confirm New Password"
+                className="w-full p-3 border border-gray-300 rounded-lg text-lg"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="w-full pt-2 rounded-lg text-lg flex items-center justify-center"
+                style={{
+                  lineHeight: "normal", // Ensures consistent vertical alignment
+                  height: "50px", // Specify a consistent height for the button
+                  display: "flex", // Flexbox for centering content
+                  alignItems: "center", // Vertically centers text
+                  justifyContent: "center", // Horizontally centers text
+                }}
+              >
+                Change Password
+              </Button>
+            </Form.Item>
+          </Form>
+        )}
+      </div>
     </div>
   );
 };
